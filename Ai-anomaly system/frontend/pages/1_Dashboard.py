@@ -108,3 +108,40 @@ st.dataframe(anomalies)
 # -----------------------------
 st.subheader("📈 Visualization")
 st.line_chart(data[data.columns[0]])
+# -----------------------------
+# AI CHATBOT (NEW FEATURE)
+# -----------------------------
+st.subheader("🤖 AI Assistant")
+
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+user_input = st.text_input("Ask about anomalies or system:")
+
+def chatbot_response(user_input):
+    user_input = user_input.lower()
+
+    if "anomaly" in user_input:
+        return "Anomalies are unusual patterns detected by the model."
+    elif "fraud" in user_input:
+        return "High-value or abnormal transactions may indicate fraud."
+    elif "cyber" in user_input:
+        return "The system detects brute-force attacks using login patterns."
+    elif "iot" in user_input:
+        return "IoT anomalies include abnormal temperature or sensor values."
+    elif "how works" in user_input:
+        return "The system uses machine learning to detect deviations and AI logic to explain them."
+    else:
+        return "I can help explain anomalies, fraud detection, cybersecurity threats, and system behavior."
+
+if user_input:
+    response = chatbot_response(user_input)
+    st.session_state.chat_history.append(("You", user_input))
+    st.session_state.chat_history.append(("AI", response))
+
+# Display chat
+for sender, message in st.session_state.chat_history:
+    if sender == "You":
+        st.write(f"🧑‍💻 You: {message}")
+    else:
+        st.write(f"🤖 AI: {message}")
