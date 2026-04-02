@@ -14,15 +14,20 @@ def login():
     if st.button("Login"):
         if username == "admin" and password == "admin123":
             st.session_state["logged_in"] = True
+            st.success("Login successful! Redirecting...")
+            st.switch_page("pages/1_Dashboard.py")
         else:
             st.error("Invalid credentials")
 
 # -----------------------------
-# SESSION
+# SESSION STATE
 # -----------------------------
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 
+# -----------------------------
+# LOGIN CHECK
+# -----------------------------
 if not st.session_state["logged_in"]:
     login()
     st.stop()
@@ -72,11 +77,12 @@ This is an AI-powered anomaly detection platform designed to monitor and analyze
 - AI-based explanation engine  
 - Interactive dashboard  
 - Downloadable reports  
-
----
-
-👉 Use the sidebar to navigate:
-- 📊 Dashboard  
-- 📈 Analytics  
-- 📄 Reports  
 """)
+
+# -----------------------------
+# QUICK NAVIGATION BUTTON
+# -----------------------------
+st.warning("⚡ Go to Dashboard to view live system")
+
+if st.button("👉 Open Dashboard"):
+    st.switch_page("pages/1_Dashboard.py")
