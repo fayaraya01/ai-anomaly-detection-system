@@ -4,12 +4,8 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 import time
 import datetime
-#import streamlit as st
 
-# LOGIN PROTECTION
-if "logged_in" not in st.session_state or not st.session_state["logged_in"]:
-    st.warning("Please login first")
-    st.switch_page("app.py")
+
 
 st.title("📊 Dashboard - Live Monitoring")
 
