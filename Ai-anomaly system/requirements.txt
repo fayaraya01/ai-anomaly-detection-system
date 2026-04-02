@@ -6,3 +6,7 @@ scikit-learn
 streamlit
 openai
 requests
+streamlit
+pandas
+numpy
+scikit-learn
