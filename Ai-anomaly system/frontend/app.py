@@ -13,7 +13,10 @@ def generate_data():
         "amount": np.random.normal(1000, 200, 100),
         "time": np.random.randint(1, 24, 100)
     })
-    data.loc[95:] = [5000, 2]
+    if np.random.rand() > 0.5:
+        data.loc[95:, "amount"] = np.random.uniform(3000, 6000, 5)
+    else:
+        data.loc[95:, "amount"] = np.random.uniform(100, 300, 5)
     return data
 
 # Detection
