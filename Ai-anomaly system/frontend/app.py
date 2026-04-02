@@ -1,52 +1,51 @@
 import streamlit as st
-import requests
 import pandas as pd
+import numpy as np
+from sklearn.ensemble import IsolationForest
 
 st.title("🚀 AI Agent-Based Anomaly Detection System")
 
+# Generate data
+def generate_data():
+    np.random.seed(42)
+    data = pd.DataFrame({
+        "amount": np.random.normal(1000, 200, 100),
+        "time": np.random.randint(1, 24, 100)
+    })
+    data.loc[95:] = [5000, 2]
+    return data
 
+# Detection
+def detect_anomalies(data):
+    model = IsolationForest(contamination=0.05)
+    preds = model.fit_predict(data[["amount", "time"]])
+    data["anomaly"] = [1 if p == -1 else 0 for p in preds]
+    return data
+
+# Explanation
+def explain(row):
+    if row["amount"] > 4000:
+        return "🚨 High transaction, possible fraud"
+    elif row["time"] < 5:
+        return "⚠️ Unusual transaction time"
+    return "Normal"
+
+# Run system
 if st.button("Run Detection System"):
-    try:
-        requests.get("http://127.0.0.1:8000/run")
-        st.success("System executed successfully!")
-    except:
-        st.error("Backend not running!")
+    data = generate_data()
+    data = detect_anomalies(data)
+    data["explanation"] = data.apply(explain, axis=1)
 
-response = requests.get("http://127.0.0.1:8000/data")
-
-data = pd.DataFrame(response.json())
-
-if not data.empty:
     st.subheader("All Data")
     st.dataframe(data)
 
+    anomalies = data[data["anomaly"] == 1]
+
     st.subheader("Anomalies")
-    st.dataframe(data[data["anomaly"] == 1])
+    st.dataframe(anomalies)
+
+    if not anomalies.empty:
+        st.error(f"🚨 ALERT: {len(anomalies)} anomalies detected!")
 
     st.subheader("Visualization")
     st.scatter_chart(data[["amount", "time"]])
-st.subheader("📊 Summary")
-
-total = len(data)
-anomalies = len(data[data["anomaly"] == 1])
-
-st.write(f"Total Transactions: {total}")
-st.write(f"Anomalies Detected: {anomalies}")
-st.subheader("Anomalies")
-st.dataframe(data[data["anomaly"] == 1])
-st.subheader("Anomalies")
-anomalies = data[data["anomaly"] == 1]
-st.dataframe(anomalies)
-
-# 🚨 ALERT SYSTEM (ADD HERE)
-if not anomalies.empty:
-    st.error("🚨 ALERT: Anomalies Detected!")
-import time
-
-if st.button("Start Live Monitoring"):
-    for i in range(5):
-        requests.get("http://127.0.0.1:8000/run")
-        st.write(f"Run {i+1} completed")
-        time.sleep(2)
-if not anomalies.empty:
-    st.error(f"🚨 ALERT: {len(anomalies)} anomalies detected!")
