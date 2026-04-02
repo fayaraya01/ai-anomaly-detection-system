@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 import time
 import datetime
-import streamlit as st
+#import streamlit as st
 
 # LOGIN PROTECTION
 if "logged_in" not in st.session_state or not st.session_state["logged_in"]:
