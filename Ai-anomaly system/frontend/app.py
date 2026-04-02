@@ -36,7 +36,7 @@ filter_severity = st.sidebar.selectbox(
 def generate_data(domain):
     if domain == "Banking":
         names = ["Arun", "Ravi", "Kumar", "John", "Ali"]
-        
+
         data = pd.DataFrame({
             "amount": np.random.normal(1000, 200, 100),
             "time": np.random.randint(1, 24, 100),
@@ -49,21 +49,23 @@ def generate_data(domain):
 
     elif domain == "Cybersecurity":
         users = ["admin", "user1", "guest", "dev", "root"]
-        
+
         data = pd.DataFrame({
-            "data_transfer": np.random.normal(500, 100, 100),
-            "access_time": np.random.randint(1, 24, 100),
+            "login_attempts": np.random.randint(1, 10, 100),
+            "failed_attempts": np.random.randint(0, 5, 100),
             "user": np.random.choice(users, 100),
-            "ip_address": np.random.randint(1000000000, 9999999999, 100).astype(str)
+            "time": np.random.randint(1, 24, 100)
         })
 
-        data.loc[95:, "data_transfer"] = np.random.uniform(2000, 5000, 5)
-        data.loc[95:, "access_time"] = np.random.randint(1, 5, 5)
+        # Inject brute-force attack
+        data.loc[95:, "login_attempts"] = np.random.randint(20, 50, 5)
+        data.loc[95:, "failed_attempts"] = np.random.randint(15, 40, 5)
+        data.loc[95:, "time"] = np.random.randint(1, 5, 5)
 
     else:  # IoT
         devices = ["Sensor-A", "Sensor-B", "Sensor-C"]
         rooms = ["Living Room", "Kitchen", "Bedroom"]
-        
+
         data = pd.DataFrame({
             "temperature": np.random.normal(30, 5, 100),
             "time": np.random.randint(1, 24, 100),
@@ -91,17 +93,21 @@ def detect_anomalies(data):
 # -----------------------------
 def explain(row):
     if row["anomaly"] == 1:
-        if list(row)[0] > 4500:
-            return "🚨 Critical anomaly detected"
-        elif list(row)[1] < 5:
-            return "⚠️ Suspicious behavior detected"
+        if "login_attempts" in row.index:
+            return "🚨 Brute-force attack suspected (multiple failed logins)"
+        elif "amount" in row.index and row["amount"] > 4500:
+            return "🚨 High-value transaction anomaly"
+        elif "temperature" in row.index and row["temperature"] > 60:
+            return "🚨 Abnormal temperature spike detected"
         else:
-            return "⚠️ Pattern deviation"
+            return "⚠️ Behavioral anomaly detected"
     return "Normal"
 
 def severity(row):
     if row["anomaly"] == 1:
-        if list(row)[0] > 4500:
+        if "login_attempts" in row.index and row["login_attempts"] > 30:
+            return "High"
+        elif list(row)[0] > 4000:
             return "High"
         elif list(row)[0] > 3000:
             return "Medium"
@@ -119,13 +125,10 @@ def fraud_score(row):
         score += 20
     return score
 
-# -----------------------------
-# HUMAN EXPLANATION
-# -----------------------------
 def human_explanation(row):
     if row["anomaly"] == 1:
-        return f"This record looks unusual because the value is high and occurs at an uncommon time, which may indicate abnormal system behavior."
-    return "This record follows normal expected patterns."
+        return "This activity is unusual due to abnormal patterns and may require investigation."
+    return "This activity appears normal."
 
 # -----------------------------
 # RUN SYSTEM
@@ -184,11 +187,21 @@ with col2:
 # -----------------------------
 # VISUALIZATION
 # -----------------------------
-st.subheader("📈 Visualization")
+st.subheader("📈 Activity Visualization")
 st.scatter_chart(data, x=data.columns[1], y=data.columns[0])
 
 # -----------------------------
-# HUMAN EXPLANATION VIEW
+# TIMELINE VIEW (NEW FEATURE)
+# -----------------------------
+st.subheader("⏳ Attack / Anomaly Timeline")
+
+timeline_data = data.copy()
+timeline_data = timeline_data.sort_values(by="time")
+
+st.line_chart(timeline_data.set_index("time")[data.columns[0]])
+
+# -----------------------------
+# HUMAN EXPLANATION
 # -----------------------------
 st.subheader("🧠 Explain Like Human")
 
