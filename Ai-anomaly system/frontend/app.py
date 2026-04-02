@@ -84,5 +84,6 @@ This is an AI-powered anomaly detection platform designed to monitor and analyze
 # -----------------------------
 st.warning("⚡ Go to Dashboard to view live system")
 
-if st.button("👉 Open Dashboard"):
-    st.switch_page("pages/1_Dashboard.py")
+if username == "admin" and password == "admin123":
+    st.session_state["logged_in"] = True
+    st.success("Login successful! Please open Dashboard from sidebar.")
