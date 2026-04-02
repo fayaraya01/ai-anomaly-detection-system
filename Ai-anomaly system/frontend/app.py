@@ -3,10 +3,10 @@ import streamlit as st
 st.set_page_config(page_title="AI Monitoring System", layout="wide")
 
 # -----------------------------
-# SIMPLE LOGIN SYSTEM
+# LOGIN SYSTEM
 # -----------------------------
 def login():
-    st.title("🔐 Login")
+    st.title("🔐 Login to AI Monitoring System")
 
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
@@ -18,7 +18,7 @@ def login():
             st.error("Invalid credentials")
 
 # -----------------------------
-# SESSION CHECK
+# SESSION
 # -----------------------------
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
@@ -28,15 +28,54 @@ if not st.session_state["logged_in"]:
     st.stop()
 
 # -----------------------------
-# MAIN PAGE
+# HOME PAGE (PRODUCT UI)
 # -----------------------------
-st.title("🚀 AI Multi-Domain Monitoring System")
+st.title("🚀 AI Multi-Domain Monitoring Platform")
 
-st.success("🟢 Logged in successfully")
+st.success("🟢 System Active & Secure")
 
 st.markdown("""
-Use the sidebar to navigate:
+## 🔍 About the Product
 
+This is an AI-powered anomaly detection platform designed to monitor and analyze data across multiple domains such as:
+
+- 💳 Banking Systems  
+- 🖥️ Cybersecurity Monitoring  
+- 🌡️ IoT & Sensor Networks  
+
+---
+
+## ⚙️ What This System Does
+
+- Detects unusual patterns using Machine Learning  
+- Explains anomalies in human-readable format  
+- Generates real-time alerts  
+- Provides analytics and insights  
+- Supports multi-domain adaptability  
+
+---
+
+## 🎯 Why This Product is Useful
+
+- Helps detect fraud in financial systems  
+- Identifies cyber attacks like brute-force attempts  
+- Monitors IoT devices for abnormal behavior  
+- Reduces manual monitoring effort  
+- Enables faster decision-making  
+
+---
+
+## 🚀 Key Features
+
+- Multi-domain intelligent monitoring  
+- Real-time alert system  
+- AI-based explanation engine  
+- Interactive dashboard  
+- Downloadable reports  
+
+---
+
+👉 Use the sidebar to navigate:
 - 📊 Dashboard  
 - 📈 Analytics  
 - 📄 Reports  
