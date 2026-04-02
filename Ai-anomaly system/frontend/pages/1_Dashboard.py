@@ -2,20 +2,33 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import IsolationForest
-import time
 import datetime
+import time
 
+# -----------------------------
+# LOGIN PROTECTION
+# -----------------------------
+if "logged_in" not in st.session_state or not st.session_state["logged_in"]:
+    st.warning("🔐 Please login first from Home page")
+    st.stop()
 
-
+# -----------------------------
+# PAGE TITLE
+# -----------------------------
 st.title("📊 Dashboard - Live Monitoring")
 
 # -----------------------------
-# SIDEBAR
+# SIDEBAR CONTROLS
 # -----------------------------
+st.sidebar.header("⚙️ Controls")
+
 domain = st.sidebar.selectbox(
     "Select Domain",
     ["Banking", "Cybersecurity", "IoT"]
 )
+
+auto_refresh = st.sidebar.checkbox("Enable Live Monitoring", value=False)
+refresh_rate = st.sidebar.slider("Refresh Rate (seconds)", 2, 10, 3)
 
 # -----------------------------
 # DATA GENERATION
@@ -25,34 +38,37 @@ def generate_data(domain):
         data = pd.DataFrame({
             "amount": np.random.normal(1000, 200, 100),
             "time": np.random.randint(1, 24, 100),
-            "name": np.random.choice(["Arun","Ravi","Ali"], 100),
-            "account": np.random.randint(10000000,99999999,100)
+            "name": np.random.choice(["Arun", "Ravi", "Ali"], 100),
+            "account_number": np.random.randint(10000000, 99999999, 100)
         })
-        data.loc[95:, "amount"] = np.random.uniform(3000,6000,5)
+        data.loc[95:, "amount"] = np.random.uniform(3000, 6000, 5)
+        data.loc[95:, "time"] = np.random.randint(1, 5, 5)
 
     elif domain == "Cybersecurity":
         data = pd.DataFrame({
-            "login_attempts": np.random.randint(1,10,100),
-            "failed_attempts": np.random.randint(0,5,100),
-            "user": np.random.choice(["admin","guest","dev"],100),
-            "time": np.random.randint(1,24,100)
+            "login_attempts": np.random.randint(1, 10, 100),
+            "failed_attempts": np.random.randint(0, 5, 100),
+            "user": np.random.choice(["admin", "guest", "dev"], 100),
+            "time": np.random.randint(1, 24, 100)
         })
-        data.loc[95:, "login_attempts"] = np.random.randint(20,50,5)
-        data.loc[95:, "failed_attempts"] = np.random.randint(15,40,5)
+        data.loc[95:, "login_attempts"] = np.random.randint(20, 50, 5)
+        data.loc[95:, "failed_attempts"] = np.random.randint(15, 40, 5)
+        data.loc[95:, "time"] = np.random.randint(1, 5, 5)
 
-    else:
+    else:  # IoT
         data = pd.DataFrame({
-            "temperature": np.random.normal(30,5,100),
-            "time": np.random.randint(1,24,100),
-            "device": np.random.choice(["Sensor-A","Sensor-B"],100),
-            "room": np.random.choice(["Hall","Kitchen"],100)
+            "temperature": np.random.normal(30, 5, 100),
+            "time": np.random.randint(1, 24, 100),
+            "device": np.random.choice(["Sensor-A", "Sensor-B"], 100),
+            "room": np.random.choice(["Hall", "Kitchen"], 100)
         })
-        data.loc[95:, "temperature"] = np.random.uniform(60,100,5)
+        data.loc[95:, "temperature"] = np.random.uniform(60, 100, 5)
+        data.loc[95:, "time"] = np.random.randint(1, 5, 5)
 
     return data
 
 # -----------------------------
-# DETECTION
+# ANOMALY DETECTION
 # -----------------------------
 def detect(data):
     model = IsolationForest(contamination=0.05)
@@ -66,11 +82,18 @@ def detect(data):
 # -----------------------------
 def explain(row):
     if row["anomaly"] == 1:
-        return "🚨 Suspicious Activity Detected"
+        if "login_attempts" in row.index:
+            return "🚨 Possible brute-force attack"
+        elif "amount" in row.index and row["amount"] > 4000:
+            return "🚨 High-value suspicious transaction"
+        elif "temperature" in row.index and row["temperature"] > 60:
+            return "🚨 Abnormal temperature spike"
+        else:
+            return "⚠️ Behavioral anomaly"
     return "Normal"
 
 # -----------------------------
-# RUN
+# RUN SYSTEM
 # -----------------------------
 data = generate_data(domain)
 data = detect(data)
@@ -81,9 +104,11 @@ anomalies = data[data["anomaly"] == 1]
 # -----------------------------
 # METRICS
 # -----------------------------
+st.subheader("📊 System Overview")
+
 col1, col2 = st.columns(2)
 col1.metric("Total Records", len(data))
-col2.metric("Anomalies", len(anomalies))
+col2.metric("Anomalies Detected", len(anomalies))
 
 # -----------------------------
 # ALERT PANEL
@@ -97,53 +122,70 @@ else:
     st.success("No anomalies detected")
 
 # -----------------------------
-# TABLES
+# DATA TABLES
 # -----------------------------
-st.subheader("📋 Data")
-st.dataframe(data)
+col1, col2 = st.columns(2)
 
-st.subheader("🚨 Anomalies")
-st.dataframe(anomalies)
+with col1:
+    st.subheader("📋 All Data")
+    st.dataframe(data, use_container_width=True)
+
+with col2:
+    st.subheader("🚨 Anomalies")
+    st.dataframe(anomalies, use_container_width=True)
 
 # -----------------------------
-# VISUAL
+# VISUALIZATION
 # -----------------------------
-st.subheader("📈 Visualization")
+st.subheader("📈 Activity Visualization")
 st.line_chart(data[data.columns[0]])
+
 # -----------------------------
-# AI CHATBOT (NEW FEATURE)
+# TIMELINE VIEW
+# -----------------------------
+st.subheader("⏳ Anomaly Timeline")
+
+timeline = data.sort_values("time")
+st.line_chart(timeline.set_index("time")[data.columns[0]])
+
+# -----------------------------
+# CHATBOT
 # -----------------------------
 st.subheader("🤖 AI Assistant")
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-user_input = st.text_input("Ask about anomalies or system:")
+user_input = st.text_input("Ask about system or anomalies:")
 
-def chatbot_response(user_input):
-    user_input = user_input.lower()
+def chatbot_response(text):
+    text = text.lower()
 
-    if "anomaly" in user_input:
-        return "Anomalies are unusual patterns detected by the model."
-    elif "fraud" in user_input:
-        return "High-value or abnormal transactions may indicate fraud."
-    elif "cyber" in user_input:
-        return "The system detects brute-force attacks using login patterns."
-    elif "iot" in user_input:
-        return "IoT anomalies include abnormal temperature or sensor values."
-    elif "how works" in user_input:
-        return "The system uses machine learning to detect deviations and AI logic to explain them."
+    if "anomaly" in text:
+        return "Anomalies are unusual patterns detected by the system."
+    elif "fraud" in text:
+        return "High-value transactions may indicate fraud."
+    elif "cyber" in text:
+        return "We detect brute-force attacks using login attempt patterns."
+    elif "iot" in text:
+        return "IoT anomalies include abnormal sensor readings."
     else:
-        return "I can help explain anomalies, fraud detection, cybersecurity threats, and system behavior."
+        return "I can help explain anomalies, fraud detection, and system behavior."
 
 if user_input:
-    response = chatbot_response(user_input)
+    reply = chatbot_response(user_input)
     st.session_state.chat_history.append(("You", user_input))
-    st.session_state.chat_history.append(("AI", response))
+    st.session_state.chat_history.append(("AI", reply))
 
-# Display chat
-for sender, message in st.session_state.chat_history:
+for sender, msg in st.session_state.chat_history:
     if sender == "You":
-        st.write(f"🧑‍💻 You: {message}")
+        st.write(f"🧑 {msg}")
     else:
-        st.write(f"🤖 AI: {message}")
+        st.write(f"🤖 {msg}")
+
+# -----------------------------
+# AUTO REFRESH
+# -----------------------------
+if auto_refresh:
+    time.sleep(refresh_rate)
+    st.rerun()
