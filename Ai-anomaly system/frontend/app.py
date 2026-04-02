@@ -35,26 +35,42 @@ filter_severity = st.sidebar.selectbox(
 # -----------------------------
 def generate_data(domain):
     if domain == "Banking":
+        names = ["Arun", "Ravi", "Kumar", "John", "Ali"]
+        
         data = pd.DataFrame({
             "amount": np.random.normal(1000, 200, 100),
-            "time": np.random.randint(1, 24, 100)
+            "time": np.random.randint(1, 24, 100),
+            "name": np.random.choice(names, 100),
+            "account_number": np.random.randint(10000000, 99999999, 100)
         })
+
         data.loc[95:, "amount"] = np.random.uniform(3000, 6000, 5)
         data.loc[95:, "time"] = np.random.randint(1, 5, 5)
 
     elif domain == "Cybersecurity":
+        users = ["admin", "user1", "guest", "dev", "root"]
+        
         data = pd.DataFrame({
             "data_transfer": np.random.normal(500, 100, 100),
-            "access_time": np.random.randint(1, 24, 100)
+            "access_time": np.random.randint(1, 24, 100),
+            "user": np.random.choice(users, 100),
+            "ip_address": np.random.randint(1000000000, 9999999999, 100).astype(str)
         })
+
         data.loc[95:, "data_transfer"] = np.random.uniform(2000, 5000, 5)
         data.loc[95:, "access_time"] = np.random.randint(1, 5, 5)
 
     else:  # IoT
+        devices = ["Sensor-A", "Sensor-B", "Sensor-C"]
+        rooms = ["Living Room", "Kitchen", "Bedroom"]
+        
         data = pd.DataFrame({
             "temperature": np.random.normal(30, 5, 100),
-            "time": np.random.randint(1, 24, 100)
+            "time": np.random.randint(1, 24, 100),
+            "device": np.random.choice(devices, 100),
+            "location": np.random.choice(rooms, 100)
         })
+
         data.loc[95:, "temperature"] = np.random.uniform(60, 100, 5)
         data.loc[95:, "time"] = np.random.randint(1, 5, 5)
 
