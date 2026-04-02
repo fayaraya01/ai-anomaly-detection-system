@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 
 st.title("🚀 AI Agent-Based Anomaly Detection System")
+st.success("System Status: Active Monitoring")
 
 # Generate data
 def generate_data():
