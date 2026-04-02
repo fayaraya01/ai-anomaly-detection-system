@@ -2,11 +2,25 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import IsolationForest
+import time
 
-st.set_page_config(page_title="AI Anomaly Detection", layout="wide")
+st.set_page_config(page_title="AI Monitoring System", layout="wide")
 
-st.title("🚀 AI Agent-Based Anomaly Detection System")
-st.success("System Status: Active Monitoring")
+st.title("🚀 AI Anomaly Detection System")
+st.success("🟢 System Status: Live Monitoring")
+
+# -----------------------------
+# SIDEBAR (Controls)
+# -----------------------------
+st.sidebar.header("⚙️ Controls")
+
+auto_refresh = st.sidebar.checkbox("Enable Live Monitoring", value=False)
+refresh_rate = st.sidebar.slider("Refresh Rate (seconds)", 2, 10, 3)
+
+filter_severity = st.sidebar.selectbox(
+    "Filter by Severity",
+    ["All", "High", "Medium", "Low"]
+)
 
 # -----------------------------
 # Generate Data
@@ -33,7 +47,7 @@ def detect_anomalies(data):
     return data
 
 # -----------------------------
-# Explanation + Severity + Score
+# Intelligence Layer
 # -----------------------------
 def explain(row):
     if row["anomaly"] == 1:
@@ -66,9 +80,9 @@ def fraud_score(row):
     return score
 
 # -----------------------------
-# Run System
+# MAIN PIPELINE
 # -----------------------------
-if st.button("Run Detection System"):
+def run_system():
     data = generate_data()
     data = detect_anomalies(data)
 
@@ -76,38 +90,58 @@ if st.button("Run Detection System"):
     data["severity"] = data.apply(severity, axis=1)
     data["fraud_score"] = data.apply(fraud_score, axis=1)
 
-    # -----------------------------
-    # Summary
-    # -----------------------------
-    st.subheader("📊 System Summary")
+    return data
 
-    total = len(data)
-    anomalies = len(data[data["anomaly"] == 1])
+# -----------------------------
+# EXECUTION
+# -----------------------------
+data = run_system()
 
-    col1, col2 = st.columns(2)
-    col1.metric("Total Transactions", total)
-    col2.metric("Anomalies Detected", anomalies)
+# Apply filter
+if filter_severity != "All":
+    data = data[data["severity"] == filter_severity]
 
-    # -----------------------------
-    # All Data
-    # -----------------------------
-    st.subheader("All Transactions")
-    st.dataframe(data)
+# -----------------------------
+# DASHBOARD METRICS
+# -----------------------------
+st.subheader("📊 System Overview")
 
-    # -----------------------------
-    # Anomalies
-    # -----------------------------
-    anomalies_df = data[data["anomaly"] == 1]
+col1, col2, col3 = st.columns(3)
 
-    st.subheader("🚨 Detected Anomalies")
-    st.dataframe(anomalies_df)
+col1.metric("Total Transactions", len(data))
+col2.metric("Anomalies", len(data[data["anomaly"] == 1]))
+col3.metric("High Severity", len(data[data["severity"] == "High"]))
 
-    # ALERT
-    if not anomalies_df.empty:
-        st.error(f"🚨 ALERT: {len(anomalies_df)} anomalies detected!")
+# -----------------------------
+# ALERT SYSTEM
+# -----------------------------
+anomalies_df = data[data["anomaly"] == 1]
 
-    # -----------------------------
-    # Visualization
-    # -----------------------------
-    st.subheader("📈 Visualization")
-    st.scatter_chart(data, x="time", y="amount")
+if not anomalies_df.empty:
+    st.error(f"🚨 ALERT: {len(anomalies_df)} anomalies detected!")
+
+# -----------------------------
+# DATA DISPLAY
+# -----------------------------
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("📋 All Transactions")
+    st.dataframe(data, use_container_width=True)
+
+with col2:
+    st.subheader("🚨 Anomalies")
+    st.dataframe(anomalies_df, use_container_width=True)
+
+# -----------------------------
+# VISUALIZATION
+# -----------------------------
+st.subheader("📈 Activity Visualization")
+st.scatter_chart(data, x="time", y="amount")
+
+# -----------------------------
+# AUTO REFRESH (LIVE SYSTEM)
+# -----------------------------
+if auto_refresh:
+    time.sleep(refresh_rate)
+    st.rerun()
