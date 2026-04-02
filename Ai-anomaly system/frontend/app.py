@@ -4,16 +4,17 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 import time
 
+# -----------------------------
+# PAGE CONFIG
+# -----------------------------
 st.set_page_config(page_title="AI Monitoring System", layout="wide")
 
-st.title("🚀 AI Anomaly Detection System")
-st.success("🟢 System Status: Live Monitoring")
-
 # -----------------------------
-# SIDEBAR (Controls)
+# SIDEBAR
 # -----------------------------
 st.sidebar.header("⚙️ Controls")
 
+theme = st.sidebar.selectbox("Theme", ["Light", "Dark"])
 auto_refresh = st.sidebar.checkbox("Enable Live Monitoring", value=False)
 refresh_rate = st.sidebar.slider("Refresh Rate (seconds)", 2, 10, 3)
 
@@ -23,7 +24,26 @@ filter_severity = st.sidebar.selectbox(
 )
 
 # -----------------------------
-# Generate Data
+# THEME STYLE
+# -----------------------------
+if theme == "Dark":
+    st.markdown(
+        """
+        <style>
+        body {background-color: #0E1117; color: white;}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+# -----------------------------
+# TITLE
+# -----------------------------
+st.title("🚀 AI Anomaly Detection System")
+st.success("🟢 System Status: Live Monitoring")
+
+# -----------------------------
+# DATA GENERATION
 # -----------------------------
 def generate_data():
     data = pd.DataFrame({
@@ -31,14 +51,13 @@ def generate_data():
         "time": np.random.randint(1, 24, 100)
     })
 
-    # Dynamic anomalies
     data.loc[95:, "amount"] = np.random.uniform(3000, 6000, 5)
     data.loc[95:, "time"] = np.random.randint(1, 5, 5)
 
     return data
 
 # -----------------------------
-# Detection
+# DETECTION
 # -----------------------------
 def detect_anomalies(data):
     model = IsolationForest(contamination=0.05)
@@ -47,7 +66,7 @@ def detect_anomalies(data):
     return data
 
 # -----------------------------
-# Intelligence Layer
+# INTELLIGENCE
 # -----------------------------
 def explain(row):
     if row["anomaly"] == 1:
@@ -80,7 +99,7 @@ def fraud_score(row):
     return score
 
 # -----------------------------
-# MAIN PIPELINE
+# RUN SYSTEM
 # -----------------------------
 def run_system():
     data = generate_data()
@@ -92,9 +111,6 @@ def run_system():
 
     return data
 
-# -----------------------------
-# EXECUTION
-# -----------------------------
 data = run_system()
 
 # Apply filter
@@ -102,7 +118,7 @@ if filter_severity != "All":
     data = data[data["severity"] == filter_severity]
 
 # -----------------------------
-# DASHBOARD METRICS
+# METRICS
 # -----------------------------
 st.subheader("📊 System Overview")
 
@@ -113,7 +129,7 @@ col2.metric("Anomalies", len(data[data["anomaly"] == 1]))
 col3.metric("High Severity", len(data[data["severity"] == "High"]))
 
 # -----------------------------
-# ALERT SYSTEM
+# ALERT
 # -----------------------------
 anomalies_df = data[data["anomaly"] == 1]
 
@@ -140,7 +156,21 @@ st.subheader("📈 Activity Visualization")
 st.scatter_chart(data, x="time", y="amount")
 
 # -----------------------------
-# AUTO REFRESH (LIVE SYSTEM)
+# DOWNLOAD REPORT
+# -----------------------------
+st.subheader("📥 Download Report")
+
+csv = data.to_csv(index=False).encode("utf-8")
+
+st.download_button(
+    label="Download CSV Report",
+    data=csv,
+    file_name="anomaly_report.csv",
+    mime="text/csv"
+)
+
+# -----------------------------
+# AUTO REFRESH
 # -----------------------------
 if auto_refresh:
     time.sleep(refresh_rate)
