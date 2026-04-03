@@ -8,46 +8,47 @@ import time
 # LOGIN PROTECTION
 # -----------------------------
 if "logged_in" not in st.session_state or not st.session_state["logged_in"]:
-    st.warning("🔐 Please login first from Home page")
+    st.warning("🔐 Please login first")
     st.stop()
 
 # -----------------------------
-# 🎨 PROFESSIONAL DARK UI
+# UI STYLING (PRO LEVEL)
 # -----------------------------
 st.markdown("""
 <style>
 .stApp {
     background-color: #0b1220;
-    color: #e5e7eb;
 }
 
-/* Sidebar */
-section[data-testid="stSidebar"] {
-    background-color: #111827;
-}
-
-/* Titles */
-h1, h2, h3 {
+/* Header */
+.header {
+    font-size: 28px;
+    font-weight: 600;
     color: #f9fafb;
+    margin-bottom: 10px;
 }
 
-/* Metric cards */
-[data-testid="metric-container"] {
+/* Card */
+.card {
     background: #111827;
-    border: 1px solid #1f2937;
     padding: 15px;
     border-radius: 12px;
+    border: 1px solid #1f2937;
+    margin-bottom: 15px;
 }
 
-/* Table */
+/* Alert */
+.alert {
+    background: #3f1d1d;
+    padding: 10px;
+    border-radius: 10px;
+    color: #f87171;
+}
+
+/* Table header */
 thead tr th {
     background-color: #111827 !important;
     color: #9ca3af !important;
-}
-
-/* Alerts */
-.stAlert {
-    border-radius: 10px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -55,21 +56,16 @@ thead tr th {
 # -----------------------------
 # HEADER
 # -----------------------------
-st.title("AI Monitoring Dashboard")
-st.caption("Real-time anomaly detection across Banking, Cybersecurity, and IoT systems")
+st.markdown('<div class="header">📊 AI Monitoring Dashboard</div>', unsafe_allow_html=True)
 
 # -----------------------------
 # SIDEBAR
 # -----------------------------
 st.sidebar.header("Controls")
 
-domain = st.sidebar.selectbox(
-    "Domain",
-    ["Banking", "Cybersecurity", "IoT"]
-)
-
+domain = st.sidebar.selectbox("Domain", ["Banking", "Cybersecurity", "IoT"])
 auto_refresh = st.sidebar.checkbox("Live Monitoring", value=False)
-refresh_rate = st.sidebar.slider("Refresh Rate (sec)", 2, 10, 3)
+refresh_rate = st.sidebar.slider("Refresh Rate", 2, 10, 3)
 
 # -----------------------------
 # DATA GENERATION
@@ -78,25 +74,23 @@ def generate_data(domain):
     if domain == "Banking":
         df = pd.DataFrame({
             "amount": np.random.normal(1000, 200, 100),
-            "time": np.random.randint(1, 24, 100),
-            "user": np.random.choice(["Arun","Ravi","Ali"],100),
+            "time": np.random.randint(1, 24, 100)
         })
-        df.loc[95:, "amount"] = np.random.uniform(3000,6000,5)
+        df.loc[95:, "amount"] = np.random.uniform(3000, 6000, 5)
 
     elif domain == "Cybersecurity":
         df = pd.DataFrame({
-            "login_attempts": np.random.randint(1,10,100),
-            "failed_attempts": np.random.randint(0,5,100),
-            "time": np.random.randint(1,24,100),
+            "login_attempts": np.random.randint(1, 10, 100),
+            "failed_attempts": np.random.randint(0, 5, 100)
         })
-        df.loc[95:, "login_attempts"] = np.random.randint(20,50,5)
+        df.loc[95:, "login_attempts"] = np.random.randint(20, 50, 5)
 
     else:
         df = pd.DataFrame({
-            "temperature": np.random.normal(30,5,100),
-            "time": np.random.randint(1,24,100),
+            "temperature": np.random.normal(30, 5, 100),
+            "time": np.random.randint(1, 24, 100)
         })
-        df.loc[95:, "temperature"] = np.random.uniform(60,100,5)
+        df.loc[95:, "temperature"] = np.random.uniform(60, 100, 5)
 
     return df
 
@@ -106,86 +100,83 @@ def generate_data(domain):
 def detect(df):
     model = IsolationForest(contamination=0.05)
     cols = df.columns[:2]
-    preds = model.fit_predict(df[cols])
-    df["anomaly"] = [1 if p == -1 else 0 for p in preds]
+    df["anomaly"] = model.fit_predict(df[cols])
+    df["anomaly"] = df["anomaly"].apply(lambda x: 1 if x == -1 else 0)
     return df
 
 # -----------------------------
-# PROCESS DATA
+# PROCESS
 # -----------------------------
-data = generate_data(domain)
-data = detect(data)
-
+data = detect(generate_data(domain))
 anomalies = data[data["anomaly"] == 1]
 
 # -----------------------------
-# METRICS
+# METRICS (CARD STYLE)
 # -----------------------------
 col1, col2, col3 = st.columns(3)
 
-col1.metric("Total Records", len(data))
-col2.metric("Anomalies", len(anomalies))
-col3.metric("Anomaly Rate", f"{(len(anomalies)/len(data))*100:.2f}%")
+with col1:
+    st.markdown('<div class="card">Total Records<br><b>{}</b></div>'.format(len(data)), unsafe_allow_html=True)
+
+with col2:
+    st.markdown('<div class="card">Anomalies<br><b>{}</b></div>'.format(len(anomalies)), unsafe_allow_html=True)
+
+with col3:
+    rate = (len(anomalies)/len(data))*100
+    st.markdown('<div class="card">Anomaly Rate<br><b>{:.2f}%</b></div>'.format(rate), unsafe_allow_html=True)
 
 # -----------------------------
-# ALERT BAR (CLEAN)
+# ALERT BAR
 # -----------------------------
 if not anomalies.empty:
-    st.error(f"{len(anomalies)} anomalies detected")
+    st.markdown(f'<div class="alert">🚨 {len(anomalies)} anomalies detected</div>', unsafe_allow_html=True)
 else:
-    st.success("System operating normally")
+    st.success("System normal")
 
 # -----------------------------
-# TABLE (CLEAN)
+# DATA TABLE
 # -----------------------------
+st.markdown("### Data Stream")
+
 def highlight(row):
-    if row["anomaly"] == 1:
-        return ["background-color:#3f1d1d"] * len(row)
-    return [""] * len(row)
+    return ['background-color:#3f1d1d' if row["anomaly"]==1 else '' for _ in row]
 
-st.subheader("Data Stream")
 st.dataframe(data.style.apply(highlight, axis=1), use_container_width=True)
 
 # -----------------------------
-# INVESTIGATION PANEL
+# INVESTIGATION
 # -----------------------------
-st.subheader("Investigation")
+st.markdown("### Investigation")
 
 if not anomalies.empty:
     idx = st.selectbox("Select anomaly", anomalies.index)
     st.json(anomalies.loc[idx].to_dict())
 else:
-    st.info("No anomalies available")
+    st.info("No anomalies")
 
 # -----------------------------
-# CHARTS
+# CHART
 # -----------------------------
-st.subheader("Trend")
+st.markdown("### Trend")
 st.line_chart(data[data.columns[0]])
 
 # -----------------------------
-# CHATBOT (CLEAN + USEFUL)
+# CHATBOT (CLEAN UI)
 # -----------------------------
-st.subheader("AI Assistant")
+st.markdown("### 🤖 AI Assistant")
 
 if "chat" not in st.session_state:
     st.session_state.chat = []
 
-query = st.text_input("Ask about system")
+query = st.text_input("Ask something")
 
 def respond(q):
     q = q.lower()
-
     if "summary" in q:
         return f"{len(data)} records, {len(anomalies)} anomalies"
-
     if "anomaly" in q:
         return f"{len(anomalies)} anomalies detected"
-
-    if "high" in q:
-        return f"{len(data[data[data.columns[0]]>4000])} high-value events"
-
-    return "Ask about anomalies, summary, or system status"
+    return "Ask about summary or anomalies"
 
 if query:
     ans = respond(query)
@@ -193,7 +184,7 @@ if query:
     st.session_state.chat.append(("AI", ans))
 
 for role, msg in st.session_state.chat[-6:]:
-    st.write(f"**{role}:** {msg}")
+    st.markdown(f"**{role}:** {msg}")
 
 # -----------------------------
 # AUTO REFRESH
