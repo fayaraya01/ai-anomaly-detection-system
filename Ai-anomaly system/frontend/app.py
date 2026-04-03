@@ -3,7 +3,13 @@ import streamlit as st
 st.set_page_config(page_title="AI Monitoring System", layout="wide")
 
 # -----------------------------
-# LOGIN SYSTEM
+# SESSION INIT
+# -----------------------------
+if "logged_in" not in st.session_state:
+    st.session_state["logged_in"] = False
+
+# -----------------------------
+# LOGIN FUNCTION
 # -----------------------------
 def login():
     st.title("🔐 Login to AI Monitoring System")
@@ -14,16 +20,9 @@ def login():
     if st.button("Login"):
         if username == "admin" and password == "admin123":
             st.session_state["logged_in"] = True
-            st.success("Login successful! Redirecting...")
-            st.switch_page("pages/1_Dashboard.py")
+            st.success("Login successful! Use sidebar to open Dashboard.")
         else:
             st.error("Invalid credentials")
-
-# -----------------------------
-# SESSION STATE
-# -----------------------------
-if "logged_in" not in st.session_state:
-    st.session_state["logged_in"] = False
 
 # -----------------------------
 # LOGIN CHECK
@@ -33,57 +32,36 @@ if not st.session_state["logged_in"]:
     st.stop()
 
 # -----------------------------
-# HOME PAGE (PRODUCT UI)
+# HOME PAGE
 # -----------------------------
 st.title("🚀 AI Multi-Domain Monitoring Platform")
-
 st.success("🟢 System Active & Secure")
 
 st.markdown("""
 ## 🔍 About the Product
 
-This is an AI-powered anomaly detection platform designed to monitor and analyze data across multiple domains such as:
+This AI-powered system detects anomalies across:
 
-- 💳 Banking Systems  
-- 🖥️ Cybersecurity Monitoring  
-- 🌡️ IoT & Sensor Networks  
-
----
-
-## ⚙️ What This System Does
-
-- Detects unusual patterns using Machine Learning  
-- Explains anomalies in human-readable format  
-- Generates real-time alerts  
-- Provides analytics and insights  
-- Supports multi-domain adaptability  
+- 💳 Banking  
+- 🖥️ Cybersecurity  
+- 🌡️ IoT Systems  
 
 ---
 
-## 🎯 Why This Product is Useful
+## ⚙️ Features
 
-- Helps detect fraud in financial systems  
-- Identifies cyber attacks like brute-force attempts  
-- Monitors IoT devices for abnormal behavior  
-- Reduces manual monitoring effort  
-- Enables faster decision-making  
-
----
-
-## 🚀 Key Features
-
-- Multi-domain intelligent monitoring  
-- Real-time alert system  
-- AI-based explanation engine  
+- Real-time anomaly detection  
+- AI-based explanations  
+- Alert system  
 - Interactive dashboard  
-- Downloadable reports  
+- Multi-domain adaptability  
+
+---
+
+👉 Use the sidebar to navigate:
+- 📊 Dashboard  
+- 📈 Analytics  
+- 📄 Reports  
 """)
 
-# -----------------------------
-# QUICK NAVIGATION BUTTON
-# -----------------------------
 st.warning("⚡ Go to Dashboard to view live system")
-
-if username == "admin" and password == "admin123":
-    st.session_state["logged_in"] = True
-    st.success("Login successful! Please open Dashboard from sidebar.")
