@@ -149,39 +149,56 @@ timeline = data.sort_values("time")
 st.line_chart(timeline.set_index("time")[data.columns[0]])
 
 # -----------------------------
-# CHATBOT
+# AI CHATBOT (IMPROVED)
 # -----------------------------
 st.subheader("🤖 AI Assistant")
 
+# Initialize chat history
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-user_input = st.text_input("Ask about system or anomalies:")
+# Input
+user_input = st.text_input("Ask something about system:")
 
-def chatbot_response(text):
+def chatbot_response(text, anomalies):
     text = text.lower()
 
     if "anomaly" in text:
-        return "Anomalies are unusual patterns detected by the system."
+        return f"There are currently {len(anomalies)} anomalies detected in the system."
+
     elif "fraud" in text:
-        return "High-value transactions may indicate fraud."
-    elif "cyber" in text:
-        return "We detect brute-force attacks using login attempt patterns."
-    elif "iot" in text:
-        return "IoT anomalies include abnormal sensor readings."
-    else:
-        return "I can help explain anomalies, fraud detection, and system behavior."
+        if "amount" in data.columns:
+            high = data[data["amount"] > 4000]
+            return f"{len(high)} high-value suspicious transactions detected."
 
+    elif "cyber" in text or "attack" in text:
+        if "login_attempts" in data.columns:
+            attacks = data[data["login_attempts"] > 20]
+            return f"{len(attacks)} possible brute-force attacks detected."
+
+    elif "iot" in text or "temperature" in text:
+        if "temperature" in data.columns:
+            high_temp = data[data["temperature"] > 60]
+            return f"{len(high_temp)} abnormal temperature events detected."
+
+    elif "summary" in text:
+        return f"System processed {len(data)} records with {len(anomalies)} anomalies."
+
+    else:
+        return "Try asking about anomalies, fraud, cyber attacks, or system summary."
+
+# Process only once per input
 if user_input:
-    reply = chatbot_response(user_input)
+    response = chatbot_response(user_input, anomalies)
     st.session_state.chat_history.append(("You", user_input))
-    st.session_state.chat_history.append(("AI", reply))
+    st.session_state.chat_history.append(("AI", response))
 
-for sender, msg in st.session_state.chat_history:
+# Show only last 6 messages (clean UI)
+for sender, msg in st.session_state.chat_history[-6:]:
     if sender == "You":
-        st.write(f"🧑 {msg}")
+        st.markdown(f"**🧑 You:** {msg}")
     else:
-        st.write(f"🤖 {msg}")
+        st.markdown(f"**🤖 AI:** {msg}")
 
 # -----------------------------
 # AUTO REFRESH
