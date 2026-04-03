@@ -2,20 +2,44 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import IsolationForest
-import datetime
 import time
+import datetime
 
 # -----------------------------
-# LOGIN PROTECTION
+# 🔐 LOGIN PROTECTION
 # -----------------------------
 if "logged_in" not in st.session_state or not st.session_state["logged_in"]:
     st.warning("🔐 Please login first from Home page")
     st.stop()
 
 # -----------------------------
-# PAGE TITLE
+# 🌙 DARK FUTURISTIC UI
 # -----------------------------
-st.title("📊 Dashboard - Live Monitoring")
+st.markdown("""
+<style>
+body, .stApp {background-color:#0E1117;color:#EAEAEA;}
+section[data-testid="stSidebar"] {background-color:#111827;}
+[data-testid="metric-container"] {
+    background-color:#1F2937;
+    padding:15px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,255,255,0.2);
+}
+thead tr th {
+    background-color:#111827 !important;
+    color:#00FFFF !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# -----------------------------
+# TITLE
+# -----------------------------
+st.markdown("""
+<h1 style='color:#00FFFF;text-shadow:0 0 10px #00FFFF;'>
+📊 AI Monitoring Dashboard
+</h1>
+""", unsafe_allow_html=True)
 
 # -----------------------------
 # SIDEBAR
@@ -79,9 +103,10 @@ def detect(data):
 # -----------------------------
 def get_severity(row):
     if row["anomaly"] == 1:
-        if row[data.columns[0]] > 4000:
+        val = row[row.index[0]]
+        if val > 4000:
             return "High"
-        elif row[data.columns[0]] > 2500:
+        elif val > 2500:
             return "Medium"
         else:
             return "Low"
@@ -113,65 +138,71 @@ data["explanation"] = data.apply(explain, axis=1)
 anomalies = data[data["anomaly"] == 1]
 
 # -----------------------------
-# METRICS
+# ⚡ ANIMATED METRICS
 # -----------------------------
-st.subheader("📊 Overview")
+st.subheader("📊 System Overview")
 
 col1, col2, col3 = st.columns(3)
+
 col1.metric("Total Records", len(data))
 col2.metric("Anomalies", len(anomalies))
 col3.metric("High Severity", len(data[data["severity"]=="High"]))
 
 # -----------------------------
-# ALERT PANEL
+# 🚨 BLINKING ALERT
 # -----------------------------
-st.subheader("🔔 Alerts")
-
 if not anomalies.empty:
-    st.error(f"🚨 {len(anomalies)} anomalies detected!")
-    for _, row in anomalies.head(3).iterrows():
-        st.warning(f"{row['explanation']} | Severity: {row['severity']}")
-else:
-    st.success("System Normal")
+    st.markdown(f"""
+    <div style='padding:15px;border-radius:10px;background:#3b0000;
+    color:#ff4d4d;font-weight:bold;animation:blinker 1s linear infinite;'>
+    🚨 {len(anomalies)} ANOMALIES DETECTED 🚨
+    </div>
+
+    <style>
+    @keyframes blinker {{
+      50% {{ opacity: 0.5; }}
+    }}
+    </style>
+    """, unsafe_allow_html=True)
 
 # -----------------------------
-# HIGHLIGHT FUNCTION
+# HIGHLIGHT ROWS
 # -----------------------------
 def highlight_rows(row):
     if row["anomaly"] == 1:
-        return ['background-color: #ffcccc'] * len(row)
+        return ['background-color:#3b0000;color:#ff4d4d;font-weight:bold'] * len(row)
     return [''] * len(row)
 
 # -----------------------------
 # DATA TABLE
 # -----------------------------
-st.subheader("📋 All Data")
+st.subheader("📋 Data")
 st.dataframe(data.style.apply(highlight_rows, axis=1), use_container_width=True)
 
 # -----------------------------
-# INVESTIGATION PANEL
+# 🔍 INVESTIGATION PANEL
 # -----------------------------
-st.subheader("🔍 Investigate Anomaly")
+st.subheader("🔍 Investigate")
 
 if not anomalies.empty:
     anomalies_reset = anomalies.reset_index(drop=True)
-
     idx = st.selectbox("Select anomaly", anomalies_reset.index)
-    selected = anomalies_reset.loc[idx]
-
-    st.error(f"⚠️ Selected Anomaly #{idx}")
-    st.json(selected.to_dict())
+    st.json(anomalies_reset.loc[idx].to_dict())
 else:
-    st.info("No anomalies to investigate")
+    st.info("No anomalies")
 
 # -----------------------------
-# VISUALIZATION
+# 📈 VISUALS
 # -----------------------------
 st.subheader("📈 Trend")
 st.line_chart(data[data.columns[0]])
 
+st.subheader("⏳ Timeline")
+timeline = data.sort_values("time")
+st.line_chart(timeline.set_index("time")[data.columns[0]])
+
 # -----------------------------
-# CHATBOT (AFTER DATA ✔️)
+# 🤖 SMART CHATBOT
 # -----------------------------
 st.subheader("🤖 AI Assistant")
 
@@ -184,21 +215,21 @@ def chatbot(text):
     text = text.lower()
 
     if "summary" in text:
-        return f"{len(data)} records processed, {len(anomalies)} anomalies found."
+        return f"{len(data)} records, {len(anomalies)} anomalies."
 
     if "anomaly" in text:
-        return f"There are {len(anomalies)} anomalies currently."
+        return f"{len(anomalies)} anomalies detected."
 
     if "fraud" in text:
-        return f"{len(data[data[data.columns[0]]>4000])} suspicious cases detected."
+        return f"{len(data[data[data.columns[0]]>4000])} suspicious cases."
 
     if "cyber" in text:
-        return f"{len(data[data[data.columns[0]]>20])} possible attacks detected."
+        return f"{len(data[data[data.columns[0]]>20])} possible attacks."
 
     if "iot" in text:
-        return f"{len(data[data[data.columns[0]]>60])} abnormal readings detected."
+        return f"{len(data[data[data.columns[0]]>60])} abnormal readings."
 
-    return "Ask about anomalies, fraud, cyber attacks, or system summary."
+    return "Ask about anomalies, fraud, cyber, or summary."
 
 if user_input:
     reply = chatbot(user_input)
@@ -209,7 +240,7 @@ for sender, msg in st.session_state.chat_history[-6:]:
     st.write(f"{'🧑' if sender=='You' else '🤖'} {msg}")
 
 # -----------------------------
-# AUTO REFRESH
+# 🔄 AUTO REFRESH
 # -----------------------------
 if auto_refresh:
     time.sleep(refresh_rate)
